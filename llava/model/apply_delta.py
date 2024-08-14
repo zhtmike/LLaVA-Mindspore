@@ -4,19 +4,19 @@ python3 -m fastchat.model.apply_delta --base ~/model_weights/llama-7b --target ~
 """
 import argparse
 
-import torch
+import mindspore as ms
 from tqdm import tqdm
-from transformers import AutoTokenizer, AutoModelForCausalLM
+from mindnlp.transformers import AutoTokenizer, AutoModelForCausalLM
 from llava import LlavaLlamaForCausalLM
 
 
 def apply_delta(base_model_path, target_model_path, delta_path):
     print("Loading base model")
     base = AutoModelForCausalLM.from_pretrained(
-        base_model_path, torch_dtype=torch.float16, low_cpu_mem_usage=True)
+        base_model_path, ms_dtype=ms.float16, low_cpu_mem_usage=True)
 
     print("Loading delta")
-    delta = LlavaLlamaForCausalLM.from_pretrained(delta_path, torch_dtype=torch.float16, low_cpu_mem_usage=True)
+    delta = LlavaLlamaForCausalLM.from_pretrained(delta_path, ms_dtype=ms.float16, low_cpu_mem_usage=True)
     delta_tokenizer = AutoTokenizer.from_pretrained(delta_path)
 
     print("Applying delta")

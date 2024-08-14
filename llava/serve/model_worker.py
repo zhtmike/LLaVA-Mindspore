@@ -21,7 +21,7 @@ from llava.utils import (build_logger, server_error_msg,
 from llava.model.builder import load_pretrained_model
 from llava.mm_utils import process_images, load_image_from_base64, tokenizer_image_token
 from llava.constants import IMAGE_TOKEN_INDEX, DEFAULT_IMAGE_TOKEN, DEFAULT_IM_START_TOKEN, DEFAULT_IM_END_TOKEN
-from transformers import TextIteratorStreamer
+from mindnlp.transformers import TextIteratorStreamer
 from threading import Thread
 
 

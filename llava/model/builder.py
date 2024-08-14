@@ -16,32 +16,28 @@
 import os
 import warnings
 import shutil
-
-from transformers import AutoTokenizer, AutoModelForCausalLM, AutoConfig, BitsAndBytesConfig
-import torch
+import mindspore as ms
+import mindnlp
+import mindnlp.core.nn as nn
+import mindnlp.core.ops as ops
+import mindnlp.core.serialization
+from mindnlp.transformers import AutoTokenizer, AutoModelForCausalLM, AutoConfig
 from llava.model import *
 from llava.constants import DEFAULT_IMAGE_PATCH_TOKEN, DEFAULT_IM_START_TOKEN, DEFAULT_IM_END_TOKEN
 
 
-def load_pretrained_model(model_path, model_base, model_name, load_8bit=False, load_4bit=False, device_map="auto", device="cuda", use_flash_attn=False, **kwargs):
-    kwargs = {"device_map": device_map, **kwargs}
+def load_pretrained_model(model_path, model_base, model_name, load_8bit=False, load_4bit=False, device_map="auto", device="npu", use_flash_attn=False, **kwargs):
+    clip_model_path = kwargs.pop("clip_model_path", None)
 
-    if device != "cuda":
-        kwargs['device_map'] = {"": device}
+    if device != "npu":
+        raise NotImplementedError("Currently it supports NPU only.")
 
     if load_8bit:
-        kwargs['load_in_8bit'] = True
+        raise NotImplementedError("Currently it does not support 8bit")
     elif load_4bit:
-        kwargs['load_in_4bit'] = True
-        kwargs['quantization_config'] = BitsAndBytesConfig(
-            load_in_4bit=True,
-            bnb_4bit_compute_dtype=torch.float16,
-            bnb_4bit_use_double_quant=True,
-            bnb_4bit_quant_type='nf4'
-        )
+        raise NotImplementedError("Currently it does not support 4bit")
     else:
-        kwargs['torch_dtype'] = torch.float16
-
+        kwargs['ms_dtype'] = ms.float16
     if use_flash_attn:
         kwargs['attn_implementation'] = 'flash_attention_2'
 
@@ -57,12 +53,12 @@ def load_pretrained_model(model_path, model_base, model_name, load_8bit=False, l
             model = LlavaLlamaForCausalLM.from_pretrained(model_base, low_cpu_mem_usage=True, config=lora_cfg_pretrained, **kwargs)
             token_num, tokem_dim = model.lm_head.out_features, model.lm_head.in_features
             if model.lm_head.weight.shape[0] != token_num:
-                model.lm_head.weight = torch.nn.Parameter(torch.empty(token_num, tokem_dim, device=model.device, dtype=model.dtype))
-                model.model.embed_tokens.weight = torch.nn.Parameter(torch.empty(token_num, tokem_dim, device=model.device, dtype=model.dtype))
+                model.lm_head.weight = nn.Parameter(ops.empty(token_num, tokem_dim, dtype=model.dtype))
+                model.model.embed_tokens.weight = nn.Parameter(ops.empty(token_num, tokem_dim, dtype=model.dtype))
 
             print('Loading additional LLaVA weights...')
             if os.path.exists(os.path.join(model_path, 'non_lora_trainables.bin')):
-                non_lora_trainables = torch.load(os.path.join(model_path, 'non_lora_trainables.bin'), map_location='cpu')
+                non_lora_trainables = mindnlp.core.serialization.load(os.path.join(model_path, 'non_lora_trainables.bin'))
             else:
                 # this is probably from HF Hub
                 from huggingface_hub import hf_hub_download
@@ -71,14 +67,14 @@ def load_pretrained_model(model_path, model_base, model_name, load_8bit=False, l
                         repo_id=repo_id,
                         filename=filename,
                         subfolder=subfolder)
-                    return torch.load(cache_file, map_location='cpu')
+                    return mindnlp.core.serialization.load(cache_file)
                 non_lora_trainables = load_from_hf(model_path, 'non_lora_trainables.bin')
             non_lora_trainables = {(k[11:] if k.startswith('base_model.') else k): v for k, v in non_lora_trainables.items()}
             if any(k.startswith('model.model.') for k in non_lora_trainables):
                 non_lora_trainables = {(k[6:] if k.startswith('model.') else k): v for k, v in non_lora_trainables.items()}
             model.load_state_dict(non_lora_trainables, strict=False)
 
-            from peft import PeftModel
+            from mindnlp.peft import PeftModel
             print('Loading LoRA weights...')
             model = PeftModel.from_pretrained(model, model_path)
             print('Merging LoRA weights...')
@@ -98,8 +94,8 @@ def load_pretrained_model(model_path, model_base, model_name, load_8bit=False, l
                 cfg_pretrained = AutoConfig.from_pretrained(model_path)
                 model = LlavaLlamaForCausalLM.from_pretrained(model_base, low_cpu_mem_usage=True, config=cfg_pretrained, **kwargs)
 
-            mm_projector_weights = torch.load(os.path.join(model_path, 'mm_projector.bin'), map_location='cpu')
-            mm_projector_weights = {k: v.to(torch.float16) for k, v in mm_projector_weights.items()}
+            mm_projector_weights = mindnlp.core.serialization.load(os.path.join(model_path, 'mm_projector.bin'), map_location='cpu')
+            mm_projector_weights = {k: v.to(ms.float16) for k, v in mm_projector_weights.items()}
             model.load_state_dict(mm_projector_weights, strict=False)
         else:
             if 'mpt' in model_name.lower():
@@ -123,7 +119,7 @@ def load_pretrained_model(model_path, model_base, model_name, load_8bit=False, l
         # Load language model
         if model_base is not None:
             # PEFT model
-            from peft import PeftModel
+            from mindnlp.peft import PeftModel
             tokenizer = AutoTokenizer.from_pretrained(model_base, use_fast=False)
             model = AutoModelForCausalLM.from_pretrained(model_base, low_cpu_mem_usage=True, **kwargs)
             print(f"Loading LoRA weights from {model_path}")
@@ -131,7 +127,7 @@ def load_pretrained_model(model_path, model_base, model_name, load_8bit=False, l
             print(f"Merging weights")
             model = model.merge_and_unload()
             print('Convert to FP16...')
-            model.to(torch.float16)
+            model.to(ms.float16)
         else:
             use_fast = False
             if 'mpt' in model_name.lower():
@@ -154,9 +150,9 @@ def load_pretrained_model(model_path, model_base, model_name, load_8bit=False, l
 
         vision_tower = model.get_vision_tower()
         if not vision_tower.is_loaded:
-            vision_tower.load_model(device_map=device_map)
+            vision_tower.load_model(clip_model_path)
         if device_map != 'auto':
-            vision_tower.to(device=device_map, dtype=torch.float16)
+            vision_tower.to(dtype=ms.float16)
         image_processor = vision_tower.image_processor
 
     if hasattr(model.config, "max_sequence_length"):

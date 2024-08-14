@@ -12,7 +12,7 @@ from PIL import Image
 import requests
 from PIL import Image
 from io import BytesIO
-from transformers import TextStreamer
+from mindnlp.transformers import TextStreamer
 
 
 def load_image(image_file):

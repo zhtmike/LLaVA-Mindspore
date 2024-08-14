@@ -72,7 +72,7 @@
 
 ## Install
 
-If you are not using Linux, do *NOT* proceed, see instructions for [macOS](https://github.com/haotian-liu/LLaVA/blob/main/docs/macOS.md) and [Windows](https://github.com/haotian-liu/LLaVA/blob/main/docs/Windows.md).
+If you are not using Linux, do *NOT* proceed.
 
 1. Clone this repository and navigate to LLaVA folder
 ```bash
@@ -82,27 +82,10 @@ cd LLaVA
 
 2. Install Package
 ```Shell
-conda create -n llava python=3.10 -y
+conda create -n llava python=3.9 -y
 conda activate llava
 pip install --upgrade pip  # enable PEP 660 support
-pip install -e .
-```
-
-3. Install additional packages for training cases
-```
-pip install -e ".[train]"
-pip install flash-attn --no-build-isolation
-```
-
-### Upgrade to latest code base
-
-```Shell
-git pull
-pip install -e .
-
-# if you see some import errors when you upgrade,
-# please try running the command below (without #)
-# pip install flash-attn --no-build-isolation --no-cache-dir
+pip install -r requirements.txt
 ```
 
 ### Quick Start With HuggingFace
@@ -115,21 +98,27 @@ from llava.model.builder import load_pretrained_model
 from llava.mm_utils import get_model_name_from_path
 from llava.eval.run_llava import eval_model
 
-model_path = "liuhaotian/llava-v1.5-7b"
+# assign the variables to the local paths if you have downloaded them locally.
+model_path = "liuhaotian/llava-v1.5-7b" 
+clip_model_path = None
 
 tokenizer, model, image_processor, context_len = load_pretrained_model(
     model_path=model_path,
     model_base=None,
-    model_name=get_model_name_from_path(model_path)
+    model_name=get_model_name_from_path(model_path),
+    clip_model_path=clip_model_path,
 )
 ```
 
 Check out the details wth the `load_pretrained_model` function in `llava/model/builder.py`.
 
-You can also use the `eval_model` function in `llava/eval/run_llava.py` to get the output easily. By doing so, you can use this code on Colab directly after downloading this repository.
+You can also use the `eval_model` function in `llava/eval/run_llava.py` to get the output easily. By doing so, you can use this code directly after downloading this repository.
 
 ``` python
-model_path = "liuhaotian/llava-v1.5-7b"
+# assign the variables to the local paths if you have downloaded them locally.
+model_path = "liuhaotian/llava-v1.5-7b" 
+clip_model_path = None
+
 prompt = "What are the things I should be cautious about when I visit here?"
 image_file = "https://llava-vl.github.io/static/images/view.jpg"
 
@@ -145,6 +134,7 @@ args = type('Args', (), {
     "top_p": None,
     "num_beams": 1,
     "max_new_tokens": 512
+    "clip_model_path": clip_model_path,
 })()
 
 eval_model(args)

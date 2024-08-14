@@ -796,7 +796,7 @@ def train(attn_implementation=None):
 
     bnb_model_from_pretrained_args = {}
     if training_args.bits in [4, 8]:
-        from transformers import BitsAndBytesConfig
+        from mindnlp.transformers import BitsAndBytesConfig
         bnb_model_from_pretrained_args.update(dict(
             device_map={"": training_args.device},
             load_in_4bit=training_args.bits == 4,

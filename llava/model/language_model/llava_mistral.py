@@ -15,15 +15,15 @@
 
 from typing import List, Optional, Tuple, Union
 
-import torch
-import torch.nn as nn
-from torch.nn import CrossEntropyLoss
+import mindspore as ms
+import mindnlp
+import mindnlp.core.nn as nn
 
-from transformers import AutoConfig, AutoModelForCausalLM, \
+from mindnlp.transformers import AutoConfig, AutoModelForCausalLM, \
                          MistralConfig, MistralModel, MistralForCausalLM
 
-from transformers.modeling_outputs import CausalLMOutputWithPast
-from transformers.generation.utils import GenerateOutput
+from mindnlp.transformers.modeling_outputs import CausalLMOutputWithPast
+from mindnlp.transformers.generation.utils import GenerateOutput
 
 from ..llava_arch import LlavaMetaModel, LlavaMetaForCausalLM
 
@@ -56,16 +56,16 @@ class LlavaMistralForCausalLM(MistralForCausalLM, LlavaMetaForCausalLM):
 
     def forward(
         self,
-        input_ids: torch.LongTensor = None,
-        attention_mask: Optional[torch.Tensor] = None,
-        position_ids: Optional[torch.LongTensor] = None,
-        past_key_values: Optional[List[torch.FloatTensor]] = None,
-        inputs_embeds: Optional[torch.FloatTensor] = None,
-        labels: Optional[torch.LongTensor] = None,
+        input_ids: ms.Tensor = None,
+        attention_mask: Optional[ms.Tensor] = None,
+        position_ids: Optional[ms.Tensor] = None,
+        past_key_values: Optional[List[ms.Tensor]] = None,
+        inputs_embeds: Optional[ms.Tensor] = None,
+        labels: Optional[ms.Tensor] = None,
         use_cache: Optional[bool] = None,
         output_attentions: Optional[bool] = None,
         output_hidden_states: Optional[bool] = None,
-        images: Optional[torch.FloatTensor] = None,
+        images: Optional[ms.Tensor] = None,
         image_sizes: Optional[List[List[int]]] = None,
         return_dict: Optional[bool] = None,
     ) -> Union[Tuple, CausalLMOutputWithPast]:
@@ -101,14 +101,14 @@ class LlavaMistralForCausalLM(MistralForCausalLM, LlavaMetaForCausalLM):
             return_dict=return_dict
         )
 
-    @torch.no_grad()
+    @mindnlp.core.no_grad()
     def generate(
         self,
-        inputs: Optional[torch.Tensor] = None,
-        images: Optional[torch.Tensor] = None,
-        image_sizes: Optional[torch.Tensor] = None,
+        inputs: Optional[ms.Tensor] = None,
+        images: Optional[ms.Tensor] = None,
+        image_sizes: Optional[ms.Tensor] = None,
         **kwargs,
-    ) -> Union[GenerateOutput, torch.LongTensor]:
+    ) -> Union[GenerateOutput, ms.Tensor]:
         position_ids = kwargs.pop("position_ids", None)
         attention_mask = kwargs.pop("attention_mask", None)
         if "inputs_embeds" in kwargs:

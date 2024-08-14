@@ -15,9 +15,11 @@
 
 from typing import Optional, Tuple
 
-import torch
+import mindspore as ms
+import mindnlp
+import mindnlp.core.nn as nn
 
-from transformers import AutoConfig, AutoModelForCausalLM, \
+from mindnlp.transformers import AutoConfig, AutoModelForCausalLM, \
                          MptConfig, MptForCausalLM, MptModel
 from llava.model.llava_arch import LlavaMetaModel, LlavaMetaForCausalLM
 
@@ -45,7 +47,7 @@ class LlavaMptForCausalLM(MptForCausalLM, LlavaMetaForCausalLM):
         super(MptForCausalLM, self).__init__(config)
 
         self.transformer = LlavaMptModel(config)
-        self.lm_head = torch.nn.Linear(config.hidden_size, config.vocab_size, bias=False)
+        self.lm_head = nn.Linear(config.hidden_size, config.vocab_size, bias=False)
 
         # Initialize weights and apply final processing
         self.post_init()
@@ -59,11 +61,11 @@ class LlavaMptForCausalLM(MptForCausalLM, LlavaMetaForCausalLM):
 
     def forward(
         self,
-        input_ids: Optional[torch.LongTensor] = None,
-        past_key_values: Optional[Tuple[Tuple[torch.Tensor, torch.Tensor], ...]] = None,
-        attention_mask: Optional[torch.Tensor] = None,
-        inputs_embeds: Optional[torch.Tensor] = None,
-        labels: Optional[torch.Tensor] = None,
+        input_ids: Optional[ms.Tensor] = None,
+        past_key_values: Optional[Tuple[Tuple[ms.Tensor, ms.Tensor], ...]] = None,
+        attention_mask: Optional[ms.Tensor] = None,
+        inputs_embeds: Optional[ms.Tensor] = None,
+        labels: Optional[ms.Tensor] = None,
         use_cache: Optional[bool] = None,
         output_attentions: Optional[bool] = None,
         output_hidden_states: Optional[bool] = None,

@@ -1,5 +1,6 @@
 import argparse
-import torch
+import mindspore as ms
+import mindnlp
 
 from llava.constants import (
     IMAGE_TOKEN_INDEX,
@@ -18,6 +19,7 @@ from llava.mm_utils import (
 )
 
 from PIL import Image
+import time
 
 import requests
 from PIL import Image
@@ -50,10 +52,12 @@ def load_images(image_files):
 def eval_model(args):
     # Model
     disable_torch_init()
+    clip_model_path = getattr(args, "clip_model_path", None)
+    benchmark = getattr(args, "benchmark", False)
 
     model_name = get_model_name_from_path(args.model_path)
     tokenizer, model, image_processor, context_len = load_pretrained_model(
-        args.model_path, args.model_base, model_name
+        args.model_path, args.model_base, model_name, clip_model_path=clip_model_path
     )
 
     qs = args.query
@@ -103,29 +107,34 @@ def eval_model(args):
         images,
         image_processor,
         model.config
-    ).to(model.device, dtype=torch.float16)
+    ).to(dtype=ms.float16)
 
     input_ids = (
         tokenizer_image_token(prompt, tokenizer, IMAGE_TOKEN_INDEX, return_tensors="pt")
         .unsqueeze(0)
-        .cuda()
     )
 
-    with torch.inference_mode():
-        output_ids = model.generate(
-            input_ids,
-            images=images_tensor,
-            image_sizes=image_sizes,
-            do_sample=True if args.temperature > 0 else False,
-            temperature=args.temperature,
-            top_p=args.top_p,
-            num_beams=args.num_beams,
-            max_new_tokens=args.max_new_tokens,
-            use_cache=True,
-        )
+    n_trials = 2 if benchmark else 1
+    with mindnlp.core.no_grad():
+        for _ in range(n_trials):
+            start_time = time.time()
+            output_ids = model.generate(
+                input_ids,
+                images=images_tensor,
+                image_sizes=image_sizes,
+                do_sample=True if args.temperature > 0 else False,
+                temperature=args.temperature,
+                top_p=args.top_p,
+                num_beams=args.num_beams,
+                max_new_tokens=args.max_new_tokens,
+                use_cache=True,
+            )
+            duration = time.time() - start_time
 
     outputs = tokenizer.batch_decode(output_ids, skip_special_tokens=True)[0].strip()
     print(outputs)
+    if benchmark:
+        print(f"Taking {duration:.3f} seconds for {len(output_ids[0])} tokens.")
 
 
 if __name__ == "__main__":

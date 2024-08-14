@@ -94,9 +94,9 @@ def disable_torch_init():
     """
     Disable the redundant torch default initialization to accelerate model creation.
     """
-    import torch
-    setattr(torch.nn.Linear, "reset_parameters", lambda self: None)
-    setattr(torch.nn.LayerNorm, "reset_parameters", lambda self: None)
+    import mindnlp.core.nn as nn
+    setattr(nn.Linear, "reset_parameters", lambda self: None)
+    setattr(nn.LayerNorm, "reset_parameters", lambda self: None)
 
 
 def violates_moderation(text):

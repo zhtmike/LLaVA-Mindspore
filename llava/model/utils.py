@@ -1,4 +1,4 @@
-from transformers import AutoConfig
+from mindnlp.transformers import AutoConfig
 
 
 def auto_upgrade(config):

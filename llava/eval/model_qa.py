@@ -1,6 +1,8 @@
 import argparse
-from transformers import AutoTokenizer, AutoModelForCausalLM, StoppingCriteria
-import torch
+import mindspore as ms
+import mindnlp
+import mindnlp.core.ops as ops
+from mindnlp.transformers import AutoTokenizer, AutoModelForCausalLM, StoppingCriteria
 import os
 import json
 from tqdm import tqdm
@@ -10,14 +12,14 @@ from llava.conversation import default_conversation
 from llava.utils import disable_torch_init
 
 
-@torch.inference_mode()
+@mindnlp.core.no_grad()
 def eval_model(model_name, questions_file, answers_file):
     # Model
     disable_torch_init()
     model_name = os.path.expanduser(model_name)
     tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=False)
     model = AutoModelForCausalLM.from_pretrained(model_name,
-        torch_dtype=torch.float16).cuda()
+        mss_dtype=ms.float16)
 
 
     ques_file = open(os.path.expanduser(questions_file), "r")
@@ -30,7 +32,7 @@ def eval_model(model_name, questions_file, answers_file):
         conv.append_message(conv.roles[0], qs)
         prompt = conv.get_prompt()
         inputs = tokenizer([prompt])
-        input_ids = torch.as_tensor(inputs.input_ids).cuda()
+        input_ids = ops.as_tensor(inputs.input_ids)
         output_ids = model.generate(
             input_ids,
             do_sample=True,

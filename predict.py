@@ -1,11 +1,11 @@
-import torch
+import mindnlp
 
 from llava.constants import IMAGE_TOKEN_INDEX, DEFAULT_IMAGE_TOKEN
 from llava.conversation import conv_templates, SeparatorStyle
 from llava.model.builder import load_pretrained_model
 from llava.utils import disable_torch_init
 from llava.mm_utils import tokenizer_image_token
-from transformers.generation.streamers import TextIteratorStreamer
+from mindnlp.transformers.generation.streamers import TextIteratorStreamer
 
 from PIL import Image
 
@@ -98,7 +98,7 @@ class Predictor(BasePredictor):
         conv = conv_templates[conv_mode].copy()
     
         image_data = load_image(str(image))
-        image_tensor = self.image_processor.preprocess(image_data, return_tensors='pt')['pixel_values'].half().cuda()
+        image_tensor = self.image_processor.preprocess(image_data, return_tensors='pt')['pixel_values'].half()
     
         # loop start
     
@@ -109,12 +109,12 @@ class Predictor(BasePredictor):
         conv.append_message(conv.roles[1], None)
         prompt = conv.get_prompt()
     
-        input_ids = tokenizer_image_token(prompt, self.tokenizer, IMAGE_TOKEN_INDEX, return_tensors='pt').unsqueeze(0).cuda()
+        input_ids = tokenizer_image_token(prompt, self.tokenizer, IMAGE_TOKEN_INDEX, return_tensors='pt').unsqueeze(0)
         stop_str = conv.sep if conv.sep_style != SeparatorStyle.TWO else conv.sep2
         keywords = [stop_str]
         streamer = TextIteratorStreamer(self.tokenizer, skip_prompt=True, timeout=20.0)
     
-        with torch.inference_mode():
+        with mindnlp.core.no_grad():
             thread = Thread(target=self.model.generate, kwargs=dict(
                 inputs=input_ids,
                 images=image_tensor,

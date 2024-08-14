@@ -1,11 +1,13 @@
 from PIL import Image
 from io import BytesIO
 import base64
-import torch
 import math
 import ast
 
-from transformers import StoppingCriteria
+import mindspore as ms
+import mindnlp.core.ops as ops
+
+from mindnlp.transformers import StoppingCriteria
 from llava.constants import IMAGE_TOKEN_INDEX
 
 
@@ -140,9 +142,9 @@ def process_anyres_image(image, processor, grid_pinpoints):
     image_original_resize = image.resize((processor.size['shortest_edge'], processor.size['shortest_edge']))
 
     image_patches = [image_original_resize] + patches
-    image_patches = [processor.preprocess(image_patch, return_tensors='pt')['pixel_values'][0]
+    image_patches = [processor.preprocess(image_patch, return_tensors='ms')['pixel_values'][0]
                      for image_patch in image_patches]
-    return torch.stack(image_patches, dim=0)
+    return ops.stack(image_patches, dim=0)
 
 
 def load_image_from_base64(image):
@@ -169,16 +171,16 @@ def process_images(images, image_processor, model_cfg):
     if image_aspect_ratio == 'pad':
         for image in images:
             image = expand2square(image, tuple(int(x*255) for x in image_processor.image_mean))
-            image = image_processor.preprocess(image, return_tensors='pt')['pixel_values'][0]
+            image = image_processor.preprocess(image, return_tensors='ms')['pixel_values'][0]
             new_images.append(image)
     elif image_aspect_ratio == "anyres":
         for image in images:
             image = process_anyres_image(image, image_processor, model_cfg.image_grid_pinpoints)
             new_images.append(image)
     else:
-        return image_processor(images, return_tensors='pt')['pixel_values']
+        return image_processor(images, return_tensors='ms')['pixel_values']
     if all(x.shape == new_images[0].shape for x in new_images):
-        new_images = torch.stack(new_images, dim=0)
+        new_images = ops.stack(new_images, dim=0)
     return new_images
 
 
@@ -199,7 +201,7 @@ def tokenizer_image_token(prompt, tokenizer, image_token_index=IMAGE_TOKEN_INDEX
 
     if return_tensors is not None:
         if return_tensors == 'pt':
-            return torch.tensor(input_ids, dtype=torch.long)
+            return ms.Tensor(input_ids, dtype=ms.int64)
         raise ValueError(f'Unsupported tensor type: {return_tensors}')
     return input_ids
 
@@ -223,16 +225,16 @@ class KeywordsStoppingCriteria(StoppingCriteria):
                 cur_keyword_ids = cur_keyword_ids[1:]
             if len(cur_keyword_ids) > self.max_keyword_len:
                 self.max_keyword_len = len(cur_keyword_ids)
-            self.keyword_ids.append(torch.tensor(cur_keyword_ids))
+            self.keyword_ids.append(ms.Tensor(cur_keyword_ids))
         self.tokenizer = tokenizer
         self.start_len = input_ids.shape[1]
     
-    def call_for_batch(self, output_ids: torch.LongTensor, scores: torch.FloatTensor, **kwargs) -> bool:
+    def call_for_batch(self, output_ids: ms.Tensor, scores: ms.Tensor, **kwargs) -> bool:
         offset = min(output_ids.shape[1] - self.start_len, self.max_keyword_len)
         self.keyword_ids = [keyword_id.to(output_ids.device) for keyword_id in self.keyword_ids]
         for keyword_id in self.keyword_ids:
             truncated_output_ids = output_ids[0, -keyword_id.shape[0]:]
-            if torch.equal(truncated_output_ids, keyword_id):
+            if ops.equal(truncated_output_ids, keyword_id):
                 return True
         outputs = self.tokenizer.batch_decode(output_ids[:, -offset:], skip_special_tokens=True)[0]
         for keyword in self.keywords:
@@ -240,7 +242,7 @@ class KeywordsStoppingCriteria(StoppingCriteria):
                 return True
         return False
     
-    def __call__(self, output_ids: torch.LongTensor, scores: torch.FloatTensor, **kwargs) -> bool:
+    def __call__(self, output_ids: ms.Tensor, scores: ms.Tensor, **kwargs) -> bool:
         outputs = []
         for i in range(output_ids.shape[0]):
             outputs.append(self.call_for_batch(output_ids[i].unsqueeze(0), scores))

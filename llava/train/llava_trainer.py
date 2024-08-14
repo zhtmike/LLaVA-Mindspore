@@ -4,8 +4,8 @@ import torch.nn as nn
 
 from torch.utils.data import Sampler
 
-from transformers import Trainer
-from transformers.trainer import (
+from mindnlp.transformers import Trainer
+from mindnlp.transformers.trainer import (
     is_sagemaker_mp_enabled,
     get_parameter_names,
     has_length,
@@ -229,7 +229,7 @@ class LLaVATrainer(Trainer):
 
     def _save_checkpoint(self, model, trial, metrics=None):
         if getattr(self.args, 'tune_mm_mlp_adapter', False):
-            from transformers.trainer_utils import PREFIX_CHECKPOINT_DIR
+            from mindnlp.transformers.trainer_utils import PREFIX_CHECKPOINT_DIR
             checkpoint_folder = f"{PREFIX_CHECKPOINT_DIR}-{self.state.global_step}"
 
             run_dir = self._get_output_dir(trial=trial)
