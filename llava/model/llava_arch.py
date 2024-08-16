@@ -70,7 +70,7 @@ class LlavaMetaModel:
                 vision_tower = self.vision_tower[0]
             else:
                 vision_tower = self.vision_tower
-            vision_tower.load_model()
+            vision_tower.load_model(self.config.mm_vision_tower)
 
         self.config.use_mm_proj = True
         self.config.mm_projector_type = getattr(model_args, 'mm_projector_type', 'linear')
@@ -137,12 +137,16 @@ class LlavaMetaForCausalLM(ABC):
     def get_model(self):
         pass
 
+    @property
+    def dtype(self):
+        return self.get_vision_tower().dtype
+
     def get_vision_tower(self):
         return self.get_model().get_vision_tower()
 
     def encode_images(self, images):
         image_features = self.get_model().get_vision_tower()(images)
-        image_features = self.get_model().mm_projector(image_features)
+        image_features = self.get_model().mm_projector(image_features.to(self.dtype))
         return image_features
 
     def prepare_inputs_labels_for_multimodal(

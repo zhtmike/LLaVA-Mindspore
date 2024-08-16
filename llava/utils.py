@@ -124,3 +124,11 @@ def pretty_print_semaphore(semaphore):
     if semaphore is None:
         return "None"
     return f"Semaphore(value={semaphore._value}, locked={semaphore.locked()})"
+
+
+def str2bool(b: str) -> bool:
+    if b.lower() not in ["false", "true"]:
+        raise Exception("Invalid Bool Value")
+    if b.lower() in ["false"]:
+        return False
+    return True

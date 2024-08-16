@@ -1,26 +1,23 @@
 #!/bin/bash
 
-deepspeed llava/train/train_mem.py \
-    --deepspeed ./scripts/zero3.json \
-    --model_name_or_path lmsys/vicuna-13b-v1.5 \
+python llava/train/train.py \
+    --model_name_or_path /mnt/disk4/mikecheung/model/llava-v1.5-7b \
     --version v1 \
-    --data_path ./playground/data/llava_v1_5_mix665k.json \
-    --image_folder ./playground/data \
-    --vision_tower openai/clip-vit-large-patch14-336 \
-    --pretrain_mm_mlp_adapter ./checkpoints/llava-v1.5-13b-pretrain/mm_projector.bin \
+    --data_path /mnt/disk4/mikecheung/data/diffusiondb-pixelart/images/llava.json \
+    --image_folder /mnt/disk4/mikecheung/data/diffusiondb-pixelart/images \
+    --vision_tower /mnt/disk4/mikecheung/model/clip-vit-large-patch14-336 \
+    --pretrain_mm_mlp_adapter /mnt/disk4/mikecheung/model/llava-v1.5-7b/mm_projector.bin \
     --mm_projector_type mlp2x_gelu \
     --mm_vision_select_layer -2 \
     --mm_use_im_start_end False \
     --mm_use_im_patch_token False \
     --image_aspect_ratio pad \
-    --group_by_modality_length True \
-    --bf16 True \
+    --group_by_modality_length False \
+    --compute_dtype bf16 \
     --output_dir ./checkpoints/llava-v1.5-13b \
     --num_train_epochs 1 \
     --per_device_train_batch_size 16 \
-    --per_device_eval_batch_size 4 \
     --gradient_accumulation_steps 1 \
-    --evaluation_strategy "no" \
     --save_strategy "steps" \
     --save_steps 50000 \
     --save_total_limit 1 \
@@ -29,9 +26,6 @@ deepspeed llava/train/train_mem.py \
     --warmup_ratio 0.03 \
     --lr_scheduler_type "cosine" \
     --logging_steps 1 \
-    --tf32 True \
     --model_max_length 2048 \
-    --gradient_checkpointing True \
+    --gradient_checkpointing False \
     --dataloader_num_workers 4 \
-    --lazy_preprocess True \
-    --report_to wandb
