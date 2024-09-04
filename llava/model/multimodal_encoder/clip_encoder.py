@@ -52,7 +52,7 @@ class CLIPVisionTower(nn.Cell):
             raise ValueError(f'Unexpected select feature: {self.select_feature}')
         return image_features
     
-    @mindnlp.utils.no_grad()
+    # no grad
     def construct(self, images):
         if type(images) is list:
             image_features = []

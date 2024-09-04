@@ -114,21 +114,21 @@ def eval_model(args):
     )
 
     n_trials = 2 if benchmark else 1
-    with mindnlp.utils.no_grad():
-        for _ in range(n_trials):
-            start_time = time.time()
-            output_ids = model.generate(
-                input_ids,
-                images=images_tensor,
-                image_sizes=image_sizes,
-                do_sample=True if args.temperature > 0 else False,
-                temperature=args.temperature,
-                top_p=args.top_p,
-                num_beams=args.num_beams,
-                max_new_tokens=args.max_new_tokens,
-                use_cache=True,
-            )
-            duration = time.time() - start_time
+    # no grad
+    for _ in range(n_trials):
+        start_time = time.time()
+        output_ids = model.generate(
+            input_ids,
+            images=images_tensor,
+            image_sizes=image_sizes,
+            do_sample=True if args.temperature > 0 else False,
+            temperature=args.temperature,
+            top_p=args.top_p,
+            num_beams=args.num_beams,
+            max_new_tokens=args.max_new_tokens,
+            use_cache=True,
+        )
+        duration = time.time() - start_time
 
     outputs = tokenizer.batch_decode(output_ids, skip_special_tokens=True)[0].strip()
     print(outputs)

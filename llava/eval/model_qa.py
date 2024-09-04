@@ -11,8 +11,7 @@ import shortuuid
 
 from llava.conversation import default_conversation
 
-
-@mindnlp.utils.no_grad()
+# no grad
 def eval_model(model_name, questions_file, answers_file):
     # Model
     model_name = os.path.expanduser(model_name)

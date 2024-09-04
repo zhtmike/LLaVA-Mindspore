@@ -102,7 +102,7 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
             return_dict=return_dict
         )
 
-    @mindnlp.utils.no_grad()
+    # no grad
     def generate(
         self,
         inputs: Optional[ms.Tensor] = None,
