@@ -38,7 +38,8 @@ class CLIPVisionTower(nn.Cell):
 
         self.image_processor = CLIPImageProcessor.from_pretrained(clip_vision_model)
         self.vision_tower = CLIPVisionModel.from_pretrained(clip_vision_model)
-        self.vision_tower.requires_grad_(False)
+        for x in self.vision_tower.get_parameters():
+            x.requires_grad = False
 
         self.is_loaded = True
 

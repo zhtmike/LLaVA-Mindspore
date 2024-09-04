@@ -692,7 +692,8 @@ def train():
     )
     model.config.use_cache = False
     if args.freeze_backbone:
-        model.model.requires_grad_(False)  # freeze backbone except model head
+        for x in model.model.get_parameters():
+            x.requires_grad = False  # freeze backbone except model head
 
     if args.gradient_checkpointing:
         raise NotImplementedError("Does not support gradient checkpointing currently.")
@@ -717,12 +718,13 @@ def train():
 
     # training on mlp adapter or not
     if args.tune_mm_mlp_adapter:
-        model.requires_grad_(False)
-        for p in model.get_model().mm_projector.parameters():
+        for x in model.model.get_parameters():
+            x.requires_grad = False
+        for p in model.get_model().mm_projector.get_parameters():
             p.requires_grad = True
 
     if args.freeze_mm_mlp_adapter:
-        for p in model.get_model().mm_projector.parameters():
+        for p in model.get_model().mm_projector.get_parameters():
             p.requires_grad = False
 
     model.initialize_vision_tokenizer(args, tokenizer=tokenizer)
