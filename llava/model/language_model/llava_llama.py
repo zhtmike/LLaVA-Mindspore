@@ -153,7 +153,6 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
             inputs['images'] = images
         if image_sizes is not None:
             inputs['image_sizes'] = image_sizes
-        del inputs["cache_position"]  # https://github.com/haotian-liu/LLaVA/issues/1448
         return inputs
 
 AutoConfig.register("llava_llama", LlavaConfig)
