@@ -1,6 +1,7 @@
 import argparse
 import mindspore as ms
 import mindnlp
+import mindnlp.utils
 
 from llava.constants import (
     IMAGE_TOKEN_INDEX,
@@ -113,7 +114,7 @@ def eval_model(args):
     )
 
     n_trials = 2 if benchmark else 1
-    with mindnlp.core.no_grad():
+    with mindnlp.utils.no_grad():
         for _ in range(n_trials):
             start_time = time.time()
             output_ids = model.generate(

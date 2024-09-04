@@ -2,6 +2,7 @@ import mindspore.nn as nn
 import mindspore.ops as ops
 
 import mindnlp
+import mindnlp.utils
 from mindnlp.transformers import CLIPVisionModel, CLIPImageProcessor, CLIPVisionConfig
 
 
@@ -51,7 +52,7 @@ class CLIPVisionTower(nn.Cell):
             raise ValueError(f'Unexpected select feature: {self.select_feature}')
         return image_features
     
-    @mindnlp.core.no_grad()
+    @mindnlp.utils.no_grad()
     def construct(self, images):
         if type(images) is list:
             image_features = []

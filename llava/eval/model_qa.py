@@ -2,6 +2,7 @@ import argparse
 import mindspore as ms
 import mindspore.ops as ops
 import mindnlp
+import mindnlp.utils
 from mindnlp.transformers import AutoTokenizer, AutoModelForCausalLM, StoppingCriteria
 import os
 import json
@@ -11,7 +12,7 @@ import shortuuid
 from llava.conversation import default_conversation
 
 
-@mindnlp.core.no_grad()
+@mindnlp.utils.no_grad()
 def eval_model(model_name, questions_file, answers_file):
     # Model
     model_name = os.path.expanduser(model_name)

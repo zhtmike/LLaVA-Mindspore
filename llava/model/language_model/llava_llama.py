@@ -16,8 +16,9 @@
 from typing import List, Optional, Tuple, Union
 
 import mindspore as ms
+import mindspore.nn as nn
 import mindnlp
-import mindnlp.core.nn as nn
+import mindnlp.utils
 
 from mindnlp.transformers import AutoConfig, AutoModelForCausalLM, \
                          LlamaConfig, LlamaModel, LlamaForCausalLM
@@ -101,7 +102,7 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
             return_dict=return_dict
         )
 
-    @mindnlp.core.no_grad()
+    @mindnlp.utils.no_grad()
     def generate(
         self,
         inputs: Optional[ms.Tensor] = None,

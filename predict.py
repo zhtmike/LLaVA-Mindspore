@@ -17,6 +17,8 @@ import subprocess
 from threading import Thread
 
 import os
+
+import mindnlp.utils
 os.environ["HUGGINGFACE_HUB_CACHE"] = os.getcwd() + "/weights"
 
 # url for the weights mirror
@@ -112,7 +114,7 @@ class Predictor(BasePredictor):
         keywords = [stop_str]
         streamer = TextIteratorStreamer(self.tokenizer, skip_prompt=True, timeout=20.0)
     
-        with mindnlp.core.no_grad():
+        with mindnlp.utils.no_grad():
             thread = Thread(target=self.model.generate, kwargs=dict(
                 inputs=input_ids,
                 images=image_tensor,
