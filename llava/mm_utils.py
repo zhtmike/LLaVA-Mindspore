@@ -6,7 +6,7 @@ import ast
 
 import numpy as np
 import mindspore as ms
-import mindnlp.core.ops as ops
+import mindspore.ops as ops
 
 from mindnlp.transformers import StoppingCriteria
 from llava.constants import IMAGE_TOKEN_INDEX
@@ -203,7 +203,7 @@ def tokenizer_image_token(prompt, tokenizer, image_token_index=IMAGE_TOKEN_INDEX
     if return_tensors is not None:
         if return_tensors == 'pt':
             return ms.Tensor(input_ids, dtype=ms.int64)
-        elif return_tensors == 'np':
+        elif return_tensors == 'np':set
             return np.asarray(input_ids, dtype=np.int64)
         raise ValueError(f'Unsupported tensor type: {return_tensors}')
     return input_ids

@@ -54,7 +54,7 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
     def get_model(self):
         return self.model
 
-    def forward(
+    def construct(
         self,
         input_ids: ms.Tensor = None,
         attention_mask: Optional[ms.Tensor] = None,
@@ -88,7 +88,7 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
                 image_sizes
             )
 
-        return super().forward(
+        return super().construct(
             input_ids=input_ids,
             attention_mask=attention_mask,
             position_ids=position_ids,

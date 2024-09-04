@@ -1,7 +1,7 @@
 import argparse
 import mindspore as ms
+import mindspore.ops as ops
 import mindnlp
-import mindnlp.core.ops as ops
 from mindnlp.transformers import AutoTokenizer, AutoModelForCausalLM, StoppingCriteria
 import os
 import json

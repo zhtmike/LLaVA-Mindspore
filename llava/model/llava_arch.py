@@ -16,9 +16,8 @@
 from abc import ABC, abstractmethod
 
 import mindspore as ms
+import mindspore.ops as ops
 import mindnlp
-import mindnlp.core.nn as nn
-import mindnlp.core.ops as ops
 import mindnlp.utils.serialization
 
 from .multimodal_encoder.builder import build_vision_tower
@@ -39,8 +38,8 @@ class LlavaMetaModel:
             self.mm_projector = build_vision_projector(config)
 
             if 'unpad' in getattr(config, 'mm_patch_merge_type', ''):
-                self.image_newline = nn.Parameter(
-                    ops.empty(config.hidden_size, dtype=self.dtype)
+                self.image_newline = ms.Parameter(
+                    ops.zeros(config.hidden_size, dtype=self.dtype)
                 )
 
     def get_vision_tower(self):
@@ -84,7 +83,7 @@ class LlavaMetaModel:
 
             if 'unpad' in mm_patch_merge_type:
                 embed_std = 1 / ops.sqrt(ms.Tensor(self.config.hidden_size, dtype=self.dtype))
-                self.image_newline = nn.Parameter(
+                self.image_newline = ms.Parameter(
                     ops.randn(self.config.hidden_size, dtype=self.dtype) * embed_std
                 )
         else:

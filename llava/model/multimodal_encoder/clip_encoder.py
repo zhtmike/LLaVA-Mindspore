@@ -1,11 +1,11 @@
-import mindnlp.core.ops as ops
-import mindnlp.core.nn as nn
+import mindspore.nn as nn
+import mindspore.ops as ops
 
 import mindnlp
 from mindnlp.transformers import CLIPVisionModel, CLIPImageProcessor, CLIPVisionConfig
 
 
-class CLIPVisionTower(nn.Module):
+class CLIPVisionTower(nn.Cell):
     def __init__(self, vision_tower, args, delay_load=False):
         super().__init__()
 
@@ -52,7 +52,7 @@ class CLIPVisionTower(nn.Module):
         return image_features
     
     @mindnlp.core.no_grad()
-    def forward(self, images):
+    def construct(self, images):
         if type(images) is list:
             image_features = []
             for image in images:
