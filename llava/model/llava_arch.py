@@ -159,10 +159,10 @@ class LlavaMetaForCausalLM(ABC):
         if type(images) is list or images.ndim == 5:
             if type(images) is list:
                 images = [x.unsqueeze(0) if x.ndim == 3 else x for x in images]
-            concat_images = ops.cat([image for image in images], dim=0)
+            concat_images = ops.cat([image for image in images], axis=0)
             image_features = self.encode_images(concat_images)
             split_sizes = [image.shape[0] for image in images]
-            image_features = ops.split(image_features, split_sizes, dim=0)
+            image_features = ops.split(image_features, split_sizes, axis=0)
             mm_patch_merge_type = getattr(self.config, 'mm_patch_merge_type', 'flat')
             image_aspect_ratio = getattr(self.config, 'image_aspect_ratio', 'square')
             if mm_patch_merge_type == 'flat':
@@ -187,19 +187,19 @@ class LlavaMetaForCausalLM(ABC):
                             image_feature = ops.cat((
                                 image_feature,
                                 self.model.image_newline[:, None, None].broadcast_to((*image_feature.shape[:-1], 1))
-                            ), dim=-1)
+                            ), axis=-1)
                             image_feature = image_feature.flatten(start_dim=1, end_dim=2).swapaxes(0, 1)
                         else:
                             image_feature = image_feature.permute(0, 2, 1, 3, 4).contiguous()
                             image_feature = image_feature.flatten(start_dim=0, end_dim=3)
-                        image_feature = ops.cat((base_image_feature, image_feature), dim=0)
+                        image_feature = ops.cat((base_image_feature, image_feature), axis=0)
                     else:
                         image_feature = image_feature[0]
                         if 'unpad' in mm_patch_merge_type:
                             image_feature = ops.cat((
                                 image_feature,
                                 self.model.image_newline[None]
-                            ), dim=0)
+                            ), axis=0)
                     new_image_features.append(image_feature)
                 image_features = new_image_features
             else:
@@ -240,7 +240,7 @@ class LlavaMetaForCausalLM(ABC):
             if num_images == 0:
                 cur_image_features = image_features[cur_image_idx]
                 cur_input_embeds_1 = self.get_model().embed_tokens(cur_input_ids)
-                cur_input_embeds = ops.cat([cur_input_embeds_1, cur_image_features[0:0]], dim=0)
+                cur_input_embeds = ops.cat([cur_input_embeds_1, cur_image_features[0:0]], axis=0)
                 new_input_embeds.append(cur_input_embeds)
                 new_labels.append(labels[batch_idx])
                 cur_image_idx += 1
@@ -255,7 +255,7 @@ class LlavaMetaForCausalLM(ABC):
                 cur_labels_noim.append(cur_labels[image_token_indices[i]+1:image_token_indices[i+1]])
             split_sizes = [x.shape[0] for x in cur_labels_noim]
             cur_input_embeds = self.get_model().embed_tokens(ops.cat(cur_input_ids_noim))
-            cur_input_embeds_no_im = ops.split(cur_input_embeds, split_sizes, dim=0)
+            cur_input_embeds_no_im = ops.split(cur_input_embeds, split_sizes, axis=0)
             cur_new_input_embeds = []
             cur_new_labels = []
 
@@ -295,7 +295,7 @@ class LlavaMetaForCausalLM(ABC):
                 new_input_embeds_padded.append(ops.cat((
                     ops.zeros((max_len - cur_len, cur_new_embed.shape[1]), dtype=cur_new_embed.dtype),
                     cur_new_embed
-                ), dim=0))
+                ), axis=0))
                 if cur_len > 0:
                     new_labels_padded[i, -cur_len:] = cur_new_labels
                     attention_mask[i, -cur_len:] = True
@@ -304,13 +304,13 @@ class LlavaMetaForCausalLM(ABC):
                 new_input_embeds_padded.append(ops.cat((
                     cur_new_embed,
                     ops.zeros((max_len - cur_len, cur_new_embed.shape[1]), dtype=cur_new_embed.dtype)
-                ), dim=0))
+                ), axis=0))
                 if cur_len > 0:
                     new_labels_padded[i, :cur_len] = cur_new_labels
                     attention_mask[i, :cur_len] = True
                     position_ids[i, :cur_len] = ops.arange(0, cur_len, dtype=position_ids.dtype)
 
-        new_input_embeds = ops.stack(new_input_embeds_padded, dim=0)
+        new_input_embeds = ops.stack(new_input_embeds_padded, axis=0)
 
         if _labels is None:
             new_labels = None

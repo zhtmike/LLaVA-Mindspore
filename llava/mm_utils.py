@@ -145,7 +145,7 @@ def process_anyres_image(image, processor, grid_pinpoints):
     image_patches = [image_original_resize] + patches
     image_patches = [processor.preprocess(image_patch, return_tensors='ms')['pixel_values'][0]
                      for image_patch in image_patches]
-    return ops.stack(image_patches, dim=0)
+    return ops.stack(image_patches, axis=0)
 
 
 def load_image_from_base64(image):
@@ -181,7 +181,7 @@ def process_images(images, image_processor, model_cfg):
     else:
         return image_processor(images, return_tensors='ms')['pixel_values']
     if all(x.shape == new_images[0].shape for x in new_images):
-        new_images = ops.stack(new_images, dim=0)
+        new_images = ops.stack(new_images, axis=0)
     return new_images
 
 
