@@ -9,13 +9,11 @@ from tqdm import tqdm
 import shortuuid
 
 from llava.conversation import default_conversation
-from llava.utils import disable_torch_init
 
 
 @mindnlp.core.no_grad()
 def eval_model(model_name, questions_file, answers_file):
     # Model
-    disable_torch_init()
     model_name = os.path.expanduser(model_name)
     tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=False)
     model = AutoModelForCausalLM.from_pretrained(model_name,

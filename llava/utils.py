@@ -90,15 +90,6 @@ class StreamToLogger(object):
         self.linebuf = ''
 
 
-def disable_torch_init():
-    """
-    Disable the redundant torch default initialization to accelerate model creation.
-    """
-    import mindnlp.core.nn as nn
-    setattr(nn.Linear, "reset_parameters", lambda self: None)
-    setattr(nn.LayerNorm, "reset_parameters", lambda self: None)
-
-
 def violates_moderation(text):
     """
     Check whether the text violates OpenAI moderation API.

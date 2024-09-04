@@ -11,7 +11,6 @@ from llava.constants import (
 )
 from llava.conversation import conv_templates, SeparatorStyle
 from llava.model.builder import load_pretrained_model
-from llava.utils import disable_torch_init
 from llava.mm_utils import (
     process_images,
     tokenizer_image_token,
@@ -51,7 +50,6 @@ def load_images(image_files):
 
 def eval_model(args):
     # Model
-    disable_torch_init()
     clip_model_path = getattr(args, "clip_model_path", None)
     benchmark = getattr(args, "benchmark", False)
 

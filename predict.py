@@ -3,7 +3,6 @@ import mindnlp
 from llava.constants import IMAGE_TOKEN_INDEX, DEFAULT_IMAGE_TOKEN
 from llava.conversation import conv_templates, SeparatorStyle
 from llava.model.builder import load_pretrained_model
-from llava.utils import disable_torch_init
 from llava.mm_utils import tokenizer_image_token
 from mindnlp.transformers.generation.streamers import TextIteratorStreamer
 
@@ -80,7 +79,6 @@ class Predictor(BasePredictor):
         """Load the model into memory to make running multiple predictions efficient"""
         for weight in weights:
             download_weights(weight["src"], weight["dest"], weight["files"])
-        disable_torch_init()
     
         self.tokenizer, self.model, self.image_processor, self.context_len = load_pretrained_model("liuhaotian/llava-v1.5-13b", model_name="llava-v1.5-13b", model_base=None, load_8bit=False, load_4bit=False)
 
